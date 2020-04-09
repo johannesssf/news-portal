@@ -19,6 +19,18 @@ class NewsModel:
     def find_all(cls):
         return db.NEWS_DB
 
+    @classmethod
+    def find_by_id(cls, _id):
+        for news in db.NEWS_DB:
+            if news['id'] == _id:
+                obj = NewsModel(news['title'],
+                                news['content'],
+                                news['author_id'])
+                obj.id = news['id']
+                obj.created_on = news['created_on']
+                return obj
+        return None
+
     def json(self):
         return {
             'id': self.id,
@@ -59,3 +71,14 @@ class NewsModelTestCase(unittest.TestCase):
 
         new_news1.delete_from_db()
         new_news2.delete_from_db()
+
+    def test_find_by_id(self):
+        new_news1 = NewsModel('Some News', 'Some News content', 3)
+        new_news1.save_to_db()
+
+        obj = NewsModel.find_by_id(new_news1.id)
+        self.assertEqual(obj.title, new_news1.title)
+        new_news1.delete_from_db()
+
+        obj = NewsModel.find_by_id(0)
+        self.assertIsNone(obj)
