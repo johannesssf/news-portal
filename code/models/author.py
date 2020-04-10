@@ -1,53 +1,87 @@
 """Author model
 """
-import db
 import unittest
 
-from datetime import datetime
+from bson.objectid import ObjectId
+from pymongo.errors import InvalidId
+
+from db import NewsPortalDB
 
 
 class AuthorModel:
+    db = NewsPortalDB('authors')
 
-    def __init__(self, name):
-        self.id = datetime.now().microsecond
+    def __init__(self, name, _id=None):
+        self.id = _id
         self.name = name
 
     @classmethod
     def find_all(cls):
-        return db.AUTHORS_DB
+        """Find all authors into database.
+
+        Returns:
+            List[AuthorModel] -- All available authors objects
+        """
+        return [AuthorModel(a['name'], str(a['_id']))
+                for a in cls.db.newsdb.find()]
 
     @classmethod
     def find_by_name(cls, name):
-        for author in db.AUTHORS_DB:
-            if author['name'].lower() == name.lower():
-                new_author = AuthorModel(author['name'])
-                new_author.id = author['id']
-                return new_author
-        return None
+        """Find an author filtering by its name.
+
+        Arguments:
+            name {str} -- Name to be searched
+
+        Returns:
+            AuthorModel -- A matching author with the name, None otherwise
+        """
+        author = cls.db.newsdb.find_one({'name': name})
+
+        if author is not None:
+            author = AuthorModel(author['name'], str(author['_id']))
+
+        return author
 
     @classmethod
     def find_by_id(cls, author_id):
-        for author in db.AUTHORS_DB:
-            if author['id'] == author_id:
-                obj = AuthorModel(author['name'])
-                obj.id = author['id']
-                return obj
-        return None
+        """Find an author filtering by its id.
+
+        Arguments:
+            name {str} -- id to be searched
+
+        Returns:
+            AuthorModel -- A matching author with the id, None otherwise
+        """
+        try:
+            author = cls.db.newsdb.find_one({'_id': ObjectId(str(author_id))})
+            if author is not None:
+                author = AuthorModel(author['name'], str(author['_id']))
+        except InvalidId:
+            author = None
+
+        return author
 
     def json(self):
+        """A JSON representation of the AuthorModel object with dict.
+
+        Returns:
+            dict -- JSON representation
+        """
         return {
             'id': self.id,
             'name': self.name
         }
 
     def save_to_db(self):
-        db.AUTHORS_DB.append({'id': self.id, 'name': self.name})
+        """Save the current object to the database.
+        """
+        result = self.db.newsdb.insert_one({"name": self.name})
+        self.id = str(result.inserted_id)
 
     def delete_from_db(self):
-        for author in db.AUTHORS_DB:
-            if author['id'] == self.id:
-                db.AUTHORS_DB.remove(author)
-                break
+        """Delete the current object from the database.
+        """
+        self.db.newsdb.delete_one({'_id': ObjectId(self.id)})
 
 
 class AuthorModelTestCase(unittest.TestCase):
@@ -58,7 +92,7 @@ class AuthorModelTestCase(unittest.TestCase):
         new_author2 = AuthorModel('New Author')
         new_author2.save_to_db()
 
-        all_authors = AuthorModel.find_all()
+        all_authors = [a.json() for a in AuthorModel.find_all()]
         self.assertTrue(new_author1.json() in all_authors)
         self.assertTrue(new_author2.json() in all_authors)
         new_author1.delete_from_db()
@@ -70,7 +104,7 @@ class AuthorModelTestCase(unittest.TestCase):
 
         author = AuthorModel.find_by_name('My Author')
         self.assertIsNotNone(author)
-        self.assertEqual(author.name, 'My Author')
+        self.assertEqual(author.name, new_author1.name)
 
         new_author1.delete_from_db()
         author = AuthorModel.find_by_name('My Author')
@@ -84,5 +118,7 @@ class AuthorModelTestCase(unittest.TestCase):
         self.assertEqual(obj.name, new_author1.name)
         new_author1.delete_from_db()
 
-        obj = AuthorModel.find_by_id(0)
+        obj = AuthorModel.find_by_id('a1b2c3d4')
         self.assertIsNone(obj)
+
+        obj = AuthorModel.find_by_id(123)

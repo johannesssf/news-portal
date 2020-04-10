@@ -1,3 +1,15 @@
+"""Database
+"""
+from pymongo import MongoClient
+
+
+class NewsPortalDB:
+
+    def __init__(self, collection):
+        mongo = MongoClient("mongodb://localhost:27017")
+        self.newsdb = mongo.newsportal[collection]
+
+
 NEWS_DB = [
     {
         'id': 1,
