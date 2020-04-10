@@ -1,7 +1,7 @@
-"""Author API
+"""Author methord API
 """
-from flask import jsonify
-from flask_restful import Resource, reqparse
+from flask_restful import Resource
+
 from models.author import AuthorModel
 
 
@@ -14,8 +14,10 @@ class AuthorResource(Resource):
         return {'message': f"Author '{name}' not found."}, 404
 
     def post(self, name):
-        author = AuthorModel(name)
-        author.save_to_db()
+        author = AuthorModel.find_by_name(name)
+        if author is None:
+            author = AuthorModel(name)
+            author.save_to_db()
         return author.json(), 201
 
     def delete(self, name):
@@ -29,4 +31,4 @@ class AuthorResource(Resource):
 class AuthorList(Resource):
 
     def get(self):
-        return jsonify(AuthorModel.find_all())
+        return [a.json() for a in AuthorModel.find_all()]
