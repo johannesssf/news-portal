@@ -16,11 +16,12 @@ class NewsResource(Resource):
                         required=True,
                         help="This field cannot be left blank!")
     parser.add_argument('author_id',
-                        type=int,
+                        type=str,
                         required=True,
                         help="This field cannot be left blank!")
 
     def post(self):
+        # TODO: Block if the author id is unknown???
         reqdata = NewsResource.parser.parse_args()
         news = NewsModel(reqdata['title'],
                          reqdata['content'],
@@ -29,6 +30,7 @@ class NewsResource(Resource):
         return news.json()
 
     def put(self, news_id):
+        # TODO: PUT is creating a new news.
         reqdata = NewsResource.parser.parse_args()
 
         news_obj = NewsModel.find_by_id(news_id)
@@ -60,6 +62,7 @@ class NewsList(Resource):
         reqdata = NewsList.parser.parse_args()
 
         if reqdata['search_key'] is None:
-            return jsonify(NewsModel.find_all())
+            return [n.json() for n in NewsModel.find_all()]
 
+        # TODO: Create filter
         return {'msg': f"Filtered news by: {reqdata['search_key']}"}

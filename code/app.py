@@ -14,7 +14,7 @@ api.add_resource(AuthorResource, '/author/<string:name>')
 
 api.add_resource(NewsList, '/news/search')
 api.add_resource(NewsResource, '/news',
-                               '/news/<int:news_id>')
+                               '/news/<string:news_id>')
 
 
 if __name__ == "__main__":
