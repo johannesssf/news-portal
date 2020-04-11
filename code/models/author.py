@@ -1,5 +1,6 @@
 """Author model
 """
+import pymongo
 import unittest
 
 from bson.objectid import ObjectId
@@ -10,6 +11,7 @@ from db import NewsPortalDB
 
 class AuthorModel:
     db = NewsPortalDB('authors')
+    db.newsdb.create_index([('name', pymongo.TEXT)], name='author_name_index')
 
     def __init__(self, name, _id=None):
         self.id = _id
@@ -27,20 +29,19 @@ class AuthorModel:
 
     @classmethod
     def find_by_name(cls, name):
-        """Find an author filtering by its name.
+        """Find authors filtering by its name.
 
         Arguments:
             name {str} -- Name to be searched
 
         Returns:
-            AuthorModel -- A matching author with the name, None otherwise
+            list[AuthorModel] -- A list with all matched authors' name
         """
-        author = cls.db.newsdb.find_one({'name': name})
+        authors = []
+        for author in cls.db.newsdb.find({'$text': {'$search': name}}):
+            authors.append(AuthorModel(author['name'], str(author['_id'])))
 
-        if author is not None:
-            author = AuthorModel(author['name'], str(author['_id']))
-
-        return author
+        return authors
 
     @classmethod
     def find_by_id(cls, author_id):
@@ -102,13 +103,15 @@ class AuthorModelTestCase(unittest.TestCase):
         new_author1 = AuthorModel('My Author')
         new_author1.save_to_db()
 
-        author = AuthorModel.find_by_name('My Author')
-        self.assertIsNotNone(author)
-        self.assertEqual(author.name, new_author1.name)
+        authors = AuthorModel.find_by_name('My Author')
+        self.assertTrue(len(authors) > 0)
+
+        authors = AuthorModel.find_by_name('Author')
+        self.assertTrue(len(authors) > 0)
 
         new_author1.delete_from_db()
-        author = AuthorModel.find_by_name('My Author')
-        self.assertIsNone(author)
+        authors = AuthorModel.find_by_name('My Author')
+        self.assertTrue(len(authors) == 0)
 
     def test_find_by_id(self):
         new_author1 = AuthorModel('Anonymous')

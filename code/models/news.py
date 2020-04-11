@@ -1,5 +1,6 @@
 """News model
 """
+import pymongo
 import unittest
 
 from bson.objectid import ObjectId
@@ -10,6 +11,10 @@ from db import NewsPortalDB
 
 class NewsModel:
     db = NewsPortalDB('news')
+    db.newsdb.create_index(
+        [('title', pymongo.TEXT), ('content', pymongo.TEXT)],
+        name='news_title_content_index'
+    )
 
     def __init__(self, title, content, author_id, _id=None):
         self.id = _id
@@ -50,6 +55,24 @@ class NewsModel:
                                  _id=str(news['_id']))
         except InvalidId:
             news = None
+
+        return news
+
+    @classmethod
+    def find_any(cls, keyword):
+        """Find all news with the matching keyword.
+
+        Returns:
+            list[NewsModel] -- A list of news with a matching keyword
+            in its title or content
+        """
+        news = []
+        for n in cls.db.newsdb.find({'$text': {'$search': keyword}}):
+            news.append(
+                NewsModel(title=n['title'],
+                          content=n['content'],
+                          author_id=str(n['author_id']))
+            )
 
         return news
 
@@ -125,3 +148,23 @@ class NewsModelTestCase(unittest.TestCase):
 
         obj = NewsModel.find_by_id('5e90b342364975e5081a0000')
         self.assertIsNone(obj)
+
+    def test_find_any(self):
+        new_news1 = NewsModel('News 005',
+                              'News 005 content',
+                              '5e90b342364975e5081a5555')
+        new_news1.save_to_db()
+
+        new_news2 = NewsModel('News 006',
+                              'News 006 content',
+                              '5e90b342364975e5081a7777')
+        new_news2.save_to_db()
+
+        found_news = NewsModel.find_any('News')
+        self.assertTrue(len(found_news) == 2)
+
+        found_news = NewsModel.find_any('content')
+        self.assertTrue(len(found_news) == 2)
+
+        found_news = NewsModel.find_any('005')
+        self.assertTrue(len(found_news) == 1)
