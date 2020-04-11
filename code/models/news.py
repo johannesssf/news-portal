@@ -1,4 +1,4 @@
-"""New model
+"""News model
 """
 import unittest
 
@@ -69,14 +69,24 @@ class NewsModel:
     def save_to_db(self):
         """Save the current object to the database.
         """
-        result = self.db.newsdb.insert_one(
-            {
-                'title': self.title,
-                'content': self.content,
-                'author_id': ObjectId(self.author_id)
-            }
-        )
-        self.id = str(result.inserted_id)
+        if self.id is None:
+            result = self.db.newsdb.insert_one(
+                {
+                    'title': self.title,
+                    'content': self.content,
+                    'author_id': ObjectId(self.author_id)
+                }
+            )
+            self.id = str(result.inserted_id)
+        else:
+            self.db.newsdb.update_one(
+                {'_id': ObjectId(self.id)},
+                {'$set': {
+                    'title': self.title,
+                    'content': self.content,
+                    'author_id': self.author_id
+                }}
+            )
 
     def delete_from_db(self):
         """Delete the current object from the database.

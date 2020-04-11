@@ -1,4 +1,4 @@
-"""Author methord API
+"""Author methors API
 """
 from flask_restful import Resource
 
@@ -6,7 +6,8 @@ from models.author import AuthorModel
 
 
 class AuthorResource(Resource):
-
+    """Class responsible to handle the methods used to manage authors.
+    """
     def get(self, name):
         author = AuthorModel.find_by_name(name)
         if author is not None:
@@ -29,6 +30,8 @@ class AuthorResource(Resource):
 
 
 class AuthorList(Resource):
-
+    """Class responsible to handle the methods used to visualize
+    authors.
+    """
     def get(self):
         return [a.json() for a in AuthorModel.find_all()]

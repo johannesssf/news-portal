@@ -1,11 +1,12 @@
-"""News API
+"""News methods API
 """
-from flask import jsonify
 from flask_restful import Resource, reqparse
 from models.news import NewsModel
 
 
 class NewsResource(Resource):
+    """Class responsible to handle the methods used to manage news.
+    """
     parser = reqparse.RequestParser()
     parser.add_argument('title',
                         type=str,
@@ -21,7 +22,6 @@ class NewsResource(Resource):
                         help="This field cannot be left blank!")
 
     def post(self):
-        # TODO: Block if the author id is unknown???
         reqdata = NewsResource.parser.parse_args()
         news = NewsModel(reqdata['title'],
                          reqdata['content'],
@@ -30,14 +30,16 @@ class NewsResource(Resource):
         return news.json()
 
     def put(self, news_id):
-        # TODO: PUT is creating a new news.
         reqdata = NewsResource.parser.parse_args()
 
         news_obj = NewsModel.find_by_id(news_id)
         if news_obj is not None:
-            news_obj.title = reqdata['title']
-            news_obj.content = reqdata['content']
-            news_obj.author_id = reqdata['author_id']
+            if len(reqdata['title']):
+                news_obj.title = reqdata['title']
+            if len(reqdata['content']):
+                news_obj.content = reqdata['content']
+            if len(reqdata['author_id']):
+                news_obj.author_id = reqdata['author_id']
             news_obj.save_to_db()
             return {'msg': 'News updated.'}
 
@@ -53,6 +55,9 @@ class NewsResource(Resource):
 
 
 class NewsList(Resource):
+    """Class responsible to handle the methods used to search and
+    visualize news.
+    """
     parser = reqparse.RequestParser()
     parser.add_argument('search_key',
                         type=str,
