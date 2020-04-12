@@ -22,6 +22,14 @@ class NewsModel:
         self.content = content
         self.author_id = author_id
 
+    def __eq__(self, news_obj):
+        return all([
+            self.id == news_obj.id,
+            self.title == news_obj.title,
+            self.content == news_obj.content,
+            self.author_id == news_obj.author_id,
+        ])
+
     @classmethod
     def find_all(cls):
         """Find all news into database.
@@ -71,7 +79,30 @@ class NewsModel:
             news.append(
                 NewsModel(title=n['title'],
                           content=n['content'],
-                          author_id=str(n['author_id']))
+                          author_id=str(n['author_id']),
+                          _id=str(n['_id']))
+            )
+
+        return news
+
+    @classmethod
+    def find_by_author(cls, author_id):
+        """Find all news with matching author_id.
+
+        Arguments:
+            author_id {str} -- Author id
+
+        Returns:
+            list[NewsModel] -- List with all news matching the author id
+        """
+        news = []
+        all_news = cls.db.newsdb.find({'author_id': author_id})
+        for n in all_news:
+            news.append(
+                NewsModel(title=n['title'],
+                          content=n['content'],
+                          author_id=str(n['author_id']),
+                          _id=str(n['_id']))
             )
 
         return news
@@ -188,3 +219,32 @@ class NewsModelTestCase(unittest.TestCase):
 
         new_news1.delete_from_db()
         new_news2.delete_from_db()
+
+    def test_find_by_author(self):
+        new_news1 = NewsModel('News 111',
+                              'News 111 content',
+                              '5e90b342364975e5081a5555')
+        new_news1.save_to_db()
+
+        new_news2 = NewsModel('News 222',
+                              'News 222 content',
+                              '5e90b342364975e5081a7777')
+        new_news2.save_to_db()
+
+        new_news3 = NewsModel('News 333',
+                              'News 333 content',
+                              '5e90b342364975e5081a7777')
+        new_news3.save_to_db()
+
+        found_news = NewsModel.find_by_author('5e90b342364975e5081a7777')
+        self.assertTrue(len(found_news) == 2)
+
+        found_news = NewsModel.find_by_author('5e90b342364975e5081a5555')
+        self.assertTrue(len(found_news) == 1)
+
+        found_news = NewsModel.find_by_author('5e90b342364975e5081a1111')
+        self.assertTrue(len(found_news) == 0)
+
+        new_news1.delete_from_db()
+        new_news2.delete_from_db()
+        new_news3.delete_from_db()

@@ -2,6 +2,7 @@
 """
 from flask_restful import Resource, reqparse
 from models.news import NewsModel
+from models.author import AuthorModel
 
 
 class NewsResource(Resource):
@@ -27,7 +28,7 @@ class NewsResource(Resource):
                          reqdata['content'],
                          reqdata['author_id'])
         news.save_to_db()
-        return news.json()
+        return news.json(), 201
 
     def put(self, news_id):
         reqdata = NewsResource.parser.parse_args()
@@ -69,5 +70,14 @@ class NewsList(Resource):
         if reqdata['search_key'] is None:
             return [n.json() for n in NewsModel.find_all()]
 
-        # TODO: Create filter
-        return {'msg': f"Filtered news by: {reqdata['search_key']}"}
+        found_news = NewsModel.find_any(reqdata['search_key'])
+        authors_news = []
+        for author in AuthorModel.find_by_name(reqdata['search_key']):
+            authors_news += NewsModel.find_by_author(author.id)
+
+        for news in authors_news:
+            if news in found_news:
+                found_news.remove(found_news.index(news))
+
+
+        return [n.json() for n in found_news + authors_news]
