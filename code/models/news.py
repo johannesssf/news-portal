@@ -118,7 +118,7 @@ class NewsModel:
 
 
 class NewsModelTestCase(unittest.TestCase):
-    def test_save_to_db(self):
+    def test_save_to_db_create(self):
         new_news1 = NewsModel('News 005',
                               'News 005 content',
                               '5e90b342364975e5081a5555')
@@ -136,6 +136,20 @@ class NewsModelTestCase(unittest.TestCase):
         new_news1.delete_from_db()
         new_news2.delete_from_db()
 
+    def test_save_to_db_update(self):
+        new_news1 = NewsModel('News 007',
+                              'News 007 content',
+                              '5e90b342364975e5081a3333')
+        new_news1.save_to_db()
+        new_news1_id = new_news1.id
+
+        new_news1.title = 'News 007 updated'
+        new_news1.content = 'News 007 content updated'
+        new_news1.save_to_db()
+
+        self.assertEqual(new_news1_id, new_news1.id)
+        new_news1.delete_from_db()
+
     def test_find_by_id(self):
         new_news1 = NewsModel('Some News',
                               'Some News content',
@@ -147,6 +161,9 @@ class NewsModelTestCase(unittest.TestCase):
         new_news1.delete_from_db()
 
         obj = NewsModel.find_by_id('5e90b342364975e5081a0000')
+        self.assertIsNone(obj)
+
+        obj = NewsModel.find_by_id(1234)
         self.assertIsNone(obj)
 
     def test_find_any(self):
@@ -168,3 +185,6 @@ class NewsModelTestCase(unittest.TestCase):
 
         found_news = NewsModel.find_any('005')
         self.assertTrue(len(found_news) == 1)
+
+        new_news1.delete_from_db()
+        new_news2.delete_from_db()
