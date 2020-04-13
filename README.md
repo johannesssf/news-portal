@@ -13,7 +13,7 @@
     * Editar notícia
     * Excluir notícia
     * Pesquisar notícia por palavra-chave (título, conteúdo e author)
-    * Visualizar todas as notícia
+    * Visualizar todas as notícias
 * Gerência de autores
     * Criar autor
     * Excluir autor
