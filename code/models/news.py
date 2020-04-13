@@ -188,7 +188,7 @@ class NewsModelTestCase(unittest.TestCase):
         new_news1.save_to_db()
 
         obj = NewsModel.find_by_id(new_news1.id)
-        self.assertEqual(obj.title, new_news1.title)
+        self.assertEqual(obj, new_news1)
         new_news1.delete_from_db()
 
         obj = NewsModel.find_by_id('5e90b342364975e5081a0000')
@@ -238,9 +238,13 @@ class NewsModelTestCase(unittest.TestCase):
 
         found_news = NewsModel.find_by_author('5e90b342364975e5081a7777')
         self.assertTrue(len(found_news) == 2)
+        self.assertFalse(new_news1 in found_news)
+        self.assertTrue(new_news2 in found_news)
+        self.assertTrue(new_news3 in found_news)
 
         found_news = NewsModel.find_by_author('5e90b342364975e5081a5555')
         self.assertTrue(len(found_news) == 1)
+        self.assertTrue(new_news1 in found_news)
 
         found_news = NewsModel.find_by_author('5e90b342364975e5081a1111')
         self.assertTrue(len(found_news) == 0)
