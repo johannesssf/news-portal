@@ -92,3 +92,27 @@ Excluir notícias, ela deve ser identificada pelo seu id:
 
     DELETE: /news/<id>
 
+
+## Rodando os testes localmente
+
+1- Subir um servidor mongo (sugestão: um container docker):
+
+    docker run --rm --name mongo-server -p 27017:27017 -d mongo:latest
+
+2- Instalar os pacotes necessários (pode-se utilizar um ambiente virtual):
+
+    pip install -r requirements.txt
+
+3- Subir a aplicação Portal de Notícias:
+
+    cd code
+    python app.py
+
+4- Executar os testes unitários:
+
+    coverage run testes.py
+    coverate report
+
+5- Executar os testes de integração:
+
+    pytest integration_tests.py
