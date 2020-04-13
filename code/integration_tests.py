@@ -2,6 +2,8 @@ import json
 import pytest
 
 from requests import get, post, put, delete
+from models.author import AuthorModel
+from models.news import NewsModel
 
 
 APP_URL = 'http://localhost:5000'
