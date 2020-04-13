@@ -96,7 +96,7 @@ class NewsModel:
             list[NewsModel] -- List with all news matching the author id
         """
         news = []
-        all_news = cls.db.newsdb.find({'author_id': author_id})
+        all_news = cls.db.newsdb.find({'author_id': ObjectId(author_id)})
         for n in all_news:
             news.append(
                 NewsModel(title=n['title'],
@@ -138,7 +138,7 @@ class NewsModel:
                 {'$set': {
                     'title': self.title,
                     'content': self.content,
-                    'author_id': self.author_id
+                    'author_id': ObjectId(self.author_id)
                 }}
             )
 
